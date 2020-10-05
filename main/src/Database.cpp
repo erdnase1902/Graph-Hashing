@@ -697,6 +697,7 @@ Database::QueryProcess(const int qid, const int ub, const int width,
 	gettimeofday(&start, NULL);
 //	Verify(q, candidateSet, ub, width, ret);
 	int i = 0, bound;
+	std::vector<int> geds;
 	for(; i < candidateSet.size();i++)
 	{
 		graph g = graphDB[candidateSet[i]];
@@ -710,9 +711,20 @@ Database::QueryProcess(const int qid, const int ub, const int width,
 		if (ged >= 0)
 		{
 			ret.push_back(g.graph_id);
+			geds.push_back(ged);
 		}
 		FLAG = true;
 	}
+	std::vector<int> indices(ret.size());
+	std::iota(indices.begin(), indices.end(), 0);
+	std::sort(indices.begin(), indices.end(), [&](int A, int B) -> bool {
+		return geds[A] < geds[B];
+	});
+	std::vector<int> ret_sorted;
+	for(int idx; idx<geds.size(); idx++) {
+		ret_sorted.push_back(ret[indices[idx]]);
+	}
+	ret = ret_sorted;
 
 	gettimeofday(&end, NULL);
 	timeuse = 1000000 * (end.tv_sec - start.tv_sec)
@@ -775,6 +787,7 @@ Database::QueryProcess(const string &str, const int ub, const int width,
 	/* get gids of graphs of those codes */
 	//vector <graph> candidateSet;
 	vector<int> candidateSet;
+	std::vector<int> geds;
 	int totalGraphCnt = graphDB.size();
 	for(int i = 0; i < validCode.size(); i++)
 	{
@@ -824,9 +837,20 @@ Database::QueryProcess(const string &str, const int ub, const int width,
 		if (ged >= 0)
 		{
 			ret.push_back(g.graph_id);
+			geds.push_back(ged);
 		}
 		FLAG = true;
 	}
+	std::vector<int> indices(ret.size());
+	std::iota(indices.begin(), indices.end(), 0);
+	std::sort(indices.begin(), indices.end(), [&](int A, int B) -> bool {
+		return geds[A] < geds[B];
+	});
+	std::vector<int> ret_sorted;
+	for(int idx; idx<geds.size(); idx++) {
+		ret_sorted.push_back(ret[indices[idx]]);
+	}
+	ret = ret_sorted;
 
 	gettimeofday(&end, NULL);
 	timeuse = 1000000 * (end.tv_sec - start.tv_sec)
