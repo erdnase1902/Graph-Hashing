@@ -706,7 +706,7 @@ Database::QueryProcess(const int qid, const int ub, const int width,
 		if(ub == -1)  bound = max(g.v, q.v) + g.e + q.e;
 		else bound = ub;
 		BSEditDistance ed(width);
-		int ged = ed.getEditDistance(query, g, bound);
+		int ged = ed.getEditDistance(query, g, bound); // TODO: modify this for MCS
 		//cout << ged << endl;
 		if (ged >= 0)
 		{
@@ -832,7 +832,7 @@ Database::QueryProcess(const string &str, const int ub, const int width,
 		if(ub == -1)  bound = max(g.v, q.v) + g.e + q.e;
 		else bound = ub;
 		BSEditDistance ed(width);
-		int ged = ed.getEditDistance(query, g, bound);
+		int ged = ed.getEditDistance(query, g, bound); // TODO: modify this for MCS
 		//cout << ged << endl;
 		if (ged >= 0)
 		{

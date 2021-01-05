@@ -50,7 +50,7 @@ seed(random_seed)
 """ Create data fetcher """
 
 #data_fetcher = DataFetcher(dataset = FLAGS.dataset, exact_ged = True)
-data_fetcher = DataFetcher(dataset=FLAGS.dataset, exact_ged=True)
+data_fetcher = DataFetcher(dataset=FLAGS.dataset, exact_ged=True, max_graph_num=100) # TODO: change max_graph_num for debugging
 # wrap the data fetcher with tensorflow.dataset.prefetch to accelerate training
 dataset = tf.data.Dataset.from_generator(data_fetcher.get_train_data, 
                                          (tf.int64, tf.float32, tf.int64,

@@ -234,6 +234,7 @@ class DataFetcher:
         
     """ get train_graphs and compute label between each pair of graphs """
     def get_train_graphs_and_compute_label(self, batchsize, sample_idx = None):
+        print("Inside get_train_graphs_and_compute_label()")
         if sample_idx is None:
             # sample $batchsize graphs
             start = self.cur_train_sample_ptr
@@ -276,6 +277,11 @@ class DataFetcher:
                 ret = subprocess.check_output(['./ged', fname, g_cnt, fname, g_cnt, 
                                        str(FLAGS.GED_threshold - 1),
                                        str(FLAGS.beam_width)])
+                # change this for c++ mcs
+                print("ged ret:")
+                print(ret)
+                # mcs
+                # ged = '0.1\n0.2\n0.4'
 
                 geds = [float(ged) for ged in ret.split()][0:-1]
                 geds = np.array(geds)
@@ -681,8 +687,9 @@ class DataFetcher:
         return
     
     def generate_similar_graphs(self, g, k):
+        # TODO: change this according to MCS
         generated_graphs = []
-        geds = []
+        geds = [] # mcss = []
         for i in range(k):
             tmp_g = copy.deepcopy(g.ori_graph)
             # sample how many edit operation to perform
