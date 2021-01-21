@@ -11,7 +11,7 @@ import os
 from scipy.stats import spearmanr, kendalltau
 import subprocess
 
-from utils import * 
+from utils import *
 from graphHashFunctions import GraphHash_Rank_Reg
 import numpy as np
 from config import FLAGS

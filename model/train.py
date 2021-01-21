@@ -154,8 +154,10 @@ def train_GH_CSM(sess, model, saver, plhdr, data_fetcher,
 
     max_iter = max([FLAGS.epochs,CSM_FLAGS.csm_iters])
     
-    need_gc = False
-    tvt = 'train'
+    need_gc = False
+
+    tvt = 'train'
+
     for Iter in range(1, max_iter+1):
     
         t = time.time()
@@ -175,7 +177,8 @@ def train_GH_CSM(sess, model, saver, plhdr, data_fetcher,
             objs = [csm.model.opt_op, csm.model.train_loss]
             objs = csm_saver.proc_objs(objs, 'train', Iter)  # may become [loss_related_obj, objs...]
             target = target + objs 
-        print('after get feed dict, %f s'%(time.time()-t))
+        print('after get feed dict, %f s'%(time.time()-t))
+
 
         # Training step
         t = time.time()
@@ -193,7 +196,8 @@ def train_GH_CSM(sess, model, saver, plhdr, data_fetcher,
         if Iter <= CSM_FLAGS.csm_iters: 
             train_cost = outs[-1]
             train_time = time_rtn
-            CSM_train_costs.append(train_cost)
+            CSM_train_costs.append(train_cost)
+
             s = 'Iter:{:04n}  CSM train_loss={:.5f} time={}'.format(
                 Iter, train_cost, convert_msec_to_sec_str(train_time))
             print(s)

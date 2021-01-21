@@ -18,6 +18,9 @@ import subprocess
 import tensorflow as tf
 import xml
 import copy
+import sys
+sys.path.insert(1, '/project/Graph-Hashing/GraphMatching/src')
+from mcs_simple import mcs_simple_default_args
 
 from nx_to_gxl import nx_to_gxl
 from config import FLAGS
@@ -257,6 +260,30 @@ class DataFetcher:
         else:
             self.sample_graphs = [self.train_graphs[idx] for idx in sample_idx]
 
+        def to_nx_graph(zongyue_graph, gid):
+            ret_graph = nx.from_numpy_array(zongyue_graph.ori_graph['adj_mat'])
+            labels = {idx:label for idx, label in enumerate(zongyue_graph.ori_graph['nodes'])}
+            # nx.relabel_nodes(ret_graph, labels, copy=False)
+            # {'type':label, 'label':idx}
+            print('num nodes: {}'.format(len(zongyue_graph.ori_graph['nodes'])))
+            for idx in range(len(zongyue_graph.ori_graph['nodes'])):
+                ret_graph.nodes[idx]['type'] = labels[idx]
+                ret_graph.nodes[idx]['label'] = idx
+            ret_graph.graph['gid'] = gid
+            return ret_graph
+        self.labels = np.zeros((len(self.sample_graphs), len(self.sample_graphs)))
+
+        for row_idx in range(len(self.sample_graphs)):
+            for col_idx in range(row_idx+1, len(self.sample_graphs), 1):
+                value = mcs_simple_default_args(to_nx_graph(self.sample_graphs[row_idx], row_idx), to_nx_graph(self.sample_graphs[col_idx], col_idx))
+                print('value {}'.format(value))
+                self.labels[row_idx][col_idx] = value
+        self.labels = self.labels + self.labels.T
+
+        diag_entries = [len(graph.ori_graph['nodes']) for graph in self.sample_graphs]
+        np.fill_diagonal(self.labels, diag_entries)
+        print(self.labels)
+        return
 
         # Compute Label of every pair
         if not self.exact_ged:
