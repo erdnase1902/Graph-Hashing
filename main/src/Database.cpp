@@ -621,7 +621,7 @@ Database::directVerify(const int qid, const int ub, const int width,
  * @param fineGrained: if use continuous embedding to fine grain the candidates
                        recommend set to true
  * @pram q: the query graph, used by BSS-GED to compute exact GED.
- * @param ret: into which the returned graph ids are inserted 
+ * @param ret: into which the returned graph ids and corresponding geds are inserted. Will look like [graphid0, ged0, graphid1, ged1, ...]
  * @param candGid: into which the candidates' ids are inserted
  * @return: true if succeed, false otherwise.
  */
@@ -720,9 +720,10 @@ Database::QueryProcess(const int qid, const int ub, const int width,
 	std::sort(indices.begin(), indices.end(), [&](int A, int B) -> bool {
 		return geds[A] < geds[B];
 	});
-	std::vector<int> ret_sorted;
+	std::vector<int> ret_sorted; // Will look like [graphid0, ged0, graphid1, ged1, ...]
 	for(int idx; idx<geds.size(); idx++) {
 		ret_sorted.push_back(ret[indices[idx]]);
+		ret_sorted.push_back(geds[indices[idx]]);
 	}
 	ret = ret_sorted;
 
@@ -747,7 +748,7 @@ Database::QueryProcess(const int qid, const int ub, const int width,
  * @param fineGrained: if use continuous embedding to fine grain the candidates
                        recommend set to true
  * @pram q: the query graph, used by BSS-GED to compute exact GED.
- * @param ret: into which the returned graph ids are inserted 
+ * @param ret: into which the returned graph ids and corresponding geds are inserted. Will look like [graphid0, ged0, graphid1, ged1, ...]
  * @param candGid: into which the candidates' ids are inserted
  * @return: true if succeed, false otherwise.
  */
@@ -846,9 +847,10 @@ Database::QueryProcess(const string &str, const int ub, const int width,
 	std::sort(indices.begin(), indices.end(), [&](int A, int B) -> bool {
 		return geds[A] < geds[B];
 	});
-	std::vector<int> ret_sorted;
+	std::vector<int> ret_sorted;  // Will look like [graphid0, ged0, graphid1, ged1, ...]
 	for(int idx; idx<geds.size(); idx++) {
 		ret_sorted.push_back(ret[indices[idx]]);
+		ret_sorted.push_back(geds[indices[idx]]);
 	}
 	ret = ret_sorted;
 
@@ -905,7 +907,7 @@ void changeLabel(vector<int> &v1, vector<int> &v2)
  * @param candidates: the candidates graphs
  * @param ub: the upbound of range query
  * @param width: the beam width used by BSS-GED
- * @param ret: the passed graphs' gids are inserted into ret
+ * @param ret: the passed graphs' gids are inserted into ret.
  */
 bool 
 Database::Verify(const graph &query, const vector<graph> &candidates, 
