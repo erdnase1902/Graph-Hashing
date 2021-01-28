@@ -1,0 +1,20 @@
+[
+ {
+  "directory": "/home/yba/Documents/GraphMatching/model/mcs/mccreesh2017/code/james-cpp-periodic-save",
+  "arguments": [
+   "g++",
+   "-O3",
+   "-march=native",
+   "-Wall",
+   "-std=c++11",
+   "-o",
+   "mcsp",
+   "graph.c",
+   "mcsp.c",
+   "-pthread",
+   "-lboost_filesystem",
+   "-lboost_system"
+  ],
+  "file": "mcsp.c"
+ }
+]
