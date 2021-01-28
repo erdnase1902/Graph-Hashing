@@ -34,7 +34,7 @@ class DataFetcher:
     def __init__(self, dataset, max_graph_num = 10000000,
                  exact_ged = False, wrp_train_graph = True,
                  label_transform = lambda x: x):
-        self.max_graph_num = max_graph_num
+        self.max_graph_num = 4 # TODO: change back when not debugging
         self.exact_ged = exact_ged
         self.label_transform = label_transform
         # a helper object to map features to consecutive integer
@@ -259,67 +259,79 @@ class DataFetcher:
             self.sample_graphs = sample_graphs
         else:
             self.sample_graphs = [self.train_graphs[idx] for idx in sample_idx]
+        if True:
+            def to_nx_graph(zongyue_graph, gid):
+                ret_graph = nx.from_numpy_array(zongyue_graph.ori_graph['adj_mat'])
+                labels = {idx:label for idx, label in enumerate(zongyue_graph.ori_graph['nodes'])}
+                # nx.relabel_nodes(ret_graph, labels, copy=False)
+                # {'type':label, 'label':idx}
+                print('num nodes: {}'.format(len(zongyue_graph.ori_graph['nodes'])))
+                for idx in range(len(zongyue_graph.ori_graph['nodes'])):
+                    ret_graph.nodes[idx]['type'] = labels[idx]
+                    ret_graph.nodes[idx]['label'] = idx
+                ret_graph.graph['gid'] = gid
+                edge_attr = {e:{'id': idx} for idx, e in enumerate(ret_graph.edges)}
+                nx.set_edge_attributes(ret_graph, edge_attr)
+                return ret_graph
+            self.labels = np.zeros((len(self.sample_graphs), len(self.sample_graphs)))
 
-        def to_nx_graph(zongyue_graph, gid):
-            ret_graph = nx.from_numpy_array(zongyue_graph.ori_graph['adj_mat'])
-            labels = {idx:label for idx, label in enumerate(zongyue_graph.ori_graph['nodes'])}
-            # nx.relabel_nodes(ret_graph, labels, copy=False)
-            # {'type':label, 'label':idx}
-            print('num nodes: {}'.format(len(zongyue_graph.ori_graph['nodes'])))
-            for idx in range(len(zongyue_graph.ori_graph['nodes'])):
-                ret_graph.nodes[idx]['type'] = labels[idx]
-                ret_graph.nodes[idx]['label'] = idx
-            ret_graph.graph['gid'] = gid
-            return ret_graph
-        self.labels = np.zeros((len(self.sample_graphs), len(self.sample_graphs)))
+            for row_idx in range(len(self.sample_graphs)):
+                for col_idx in range(row_idx+1, len(self.sample_graphs), 1):
+                    value = mcs_simple_default_args(to_nx_graph(self.sample_graphs[row_idx], row_idx), to_nx_graph(self.sample_graphs[col_idx], col_idx))[0]
+                    print('value {}'.format(value))
+                    self.labels[row_idx][col_idx] = value
+            self.labels = self.labels + self.labels.T
 
-        for row_idx in range(len(self.sample_graphs)):
-            for col_idx in range(row_idx+1, len(self.sample_graphs), 1):
-                value = mcs_simple_default_args(to_nx_graph(self.sample_graphs[row_idx], row_idx), to_nx_graph(self.sample_graphs[col_idx], col_idx))
-                print('value {}'.format(value))
-                self.labels[row_idx][col_idx] = value
-        self.labels = self.labels + self.labels.T
-
-        diag_entries = [len(graph.ori_graph['nodes']) for graph in self.sample_graphs]
-        np.fill_diagonal(self.labels, diag_entries)
-        print(self.labels)
-        return
-
-        # Compute Label of every pair
-        if not self.exact_ged:
-            self.labels = self.getApproxGEDForEachPair(sample_graphs)
+            diag_entries = [len(graph.ori_graph['nodes']) for graph in self.sample_graphs]
+            np.fill_diagonal(self.labels, diag_entries)
+            # print('here is the self.labels...exiting because I am debugging')
+            # print('self.labels size is {}'.format(self.labels.shape))
+            # print(self.labels)
+            # print('exiting now because I am debuggin')
+            # exit(-1)
+            return
         else:
-            """
-            self.labels = np.zeros((batchsize, batchsize))
-            # compute in parallel for efficiency
-            pool = ThreadPool()
-            pairs = [(g1_id, g2_id) for g1_id, g2_id in itertools.product(range(batchsize), range(batchsize))]
-            pool.map(self.getLabelsForSampledGraphs, pairs)
-            pool.close()
-            pool.join()
-            """
-            fname = self.writeSampledGraphList2TempFile()
-            g_cnt = str(len(self.sample_graphs))
-            try:
-                ret = subprocess.check_output(['./ged', fname, g_cnt, fname, g_cnt, 
-                                       str(FLAGS.GED_threshold - 1),
-                                       str(FLAGS.beam_width)])
-                # change this for c++ mcs
-                print("ged ret:")
-                print(ret)
-                # mcs
-                # ged = '0.1\n0.2\n0.4'
+            # Compute Label of every pair
+            if not self.exact_ged:
+                self.labels = self.getApproxGEDForEachPair(sample_graphs)
+            else:
+                """
+                self.labels = np.zeros((batchsize, batchsize))
+                # compute in parallel for efficiency
+                pool = ThreadPool()
+                pairs = [(g1_id, g2_id) for g1_id, g2_id in itertools.product(range(batchsize), range(batchsize))]
+                pool.map(self.getLabelsForSampledGraphs, pairs)
+                pool.close()
+                pool.join()
+                """
+                fname = self.writeSampledGraphList2TempFile()
+                g_cnt = str(len(self.sample_graphs))
+                try:
+                    ret = subprocess.check_output(['./ged', fname, g_cnt, fname, g_cnt,
+                                           str(FLAGS.GED_threshold - 1),
+                                           str(FLAGS.beam_width)])
+                    # change this for c++ mcs
+                    print("ged ret:")
+                    print(ret)
+                    print('FLAGS.GED_threshold - 1: {}'.format(FLAGS.GED_threshold - 1))
+                    print('FLAGS.beam_width: {}'.format(FLAGS.beam_width))
+                    # mcs
+                    # ged = '0.1\n0.2\n0.4'
 
-                geds = [float(ged) for ged in ret.split()][0:-1]
-                geds = np.array(geds)
-                geds[geds==-1] = FLAGS.GED_threshold
-                self.labels = np.resize(geds, (batchsize, batchsize))
-            except subprocess.TimeoutExpired:
-                print('BSS-GED timeout, use Approxmate GED instead')
-                self.labels = self.getApproxGEDForEachPair(self.sample_graphs)
-            os.remove(fname)
+                    geds = [float(ged) for ged in ret.split()][0:-1]
+                    geds = np.array(geds)
+                    geds[geds==-1] = FLAGS.GED_threshold
+                    print('g_cnt: {}'.format(g_cnt))
+                    print('geds array is of length {}'.format(len(geds)))
+                    self.labels = np.resize(geds, (batchsize, batchsize))
+                    print('size of self.labels is {}. Will exit now because I am debugging...'.format(self.labels.shape))
+                    exit(-1)
+                except subprocess.TimeoutExpired:
+                    print('BSS-GED timeout, use Approxmate GED instead')
+                    self.labels = self.getApproxGEDForEachPair(self.sample_graphs)
+                os.remove(fname)
 
-        return
+            return
  
     # get certain graphs in self.training_graphs according to idx_list
     # return their features and laplacian matrices.
@@ -717,69 +729,84 @@ class DataFetcher:
         # TODO: change this according to MCS
         generated_graphs = []
         geds = [] # mcss = []
-        for i in range(k):
-            tmp_g = copy.deepcopy(g.ori_graph)
-            # sample how many edit operation to perform
-        #    op_num = randint(1,7)#FLAGS.GED_threshold-2)
-        #    if op_num  == 7:
-        #        op_num = 1
-            op_num = randint(1,FLAGS.max_op)
-            # though not accurate, may be good enough
-            geds.append(op_num)
-            j = 0
-            op_cannot_be_1 = False
-            op_cannot_be_2 = False
-            while j < op_num:
-                # randomly select a operation and do it
-                # 0: change node label, 1: insert edge, 2: delete edge
-                # 3: insert node; 4: delete node
-                can_delete_node = self.has_isolate_node(tmp_g)
-                # couldn't delete edge when only one node left
-                op_cannot_be_2 = len(tmp_g['edges']) == 0
-                
-                
-                op = randint(0, 4)
-                while (can_delete_node is False and op == 4) or\
-                (op == 0 and 'constant' in self.node_feat_type) or\
-                (op_cannot_be_1 and op == 1) or\
-                (op_cannot_be_2 and op == 2):
-                    op = randint(0, 4)
-                 
-                if op == 0:
-                    self.random_change_node_label(tmp_g)
-                    
-                elif op == 1:
-                    if not self.random_insert_edge(tmp_g):
-                        op_cannot_be_1 = True
-                        # insert edge fail, this op doesn't count
-                        j = j - 1 
-                    else:
-                        op_cannot_be_2 = True
-                        
-                elif op == 2:
-                    if not self.random_delete_edge(tmp_g):
-                        op_cannot_be_2 = True
-                        # delete fail, this op doesn't count
-                        j = j - 1
-                    else:
-                        op_cannot_be_1 = False
-                        
-                elif op == 3:
-                    self.random_insert_node(tmp_g)
-                    # insert node takes 2 ops, so add an extra one here
-                    j = j + 1
-                    op_cannot_be_1 = False
-                    
-                else:
-                    self.random_delete_node(tmp_g)
-                    # delete node takes 2 ops
-                    j = j + 1
-                    
-                    
-                j = j + 1
-            generated_graphs.append(MyGraph(tmp_g, self.max_label))   
+        if True:
+            # TODO: right now just return MCS=num_of_nodes (i.e. return the same graph)
+            mcs_size = len(g.ori_graph['nodes'])
+            # print('mcs size is {}'.format(mcs_size))
+            # print('exiting now because I am debuggin')
+            # exit(-1)
 
-        return generated_graphs, geds
+            for i in range(k):
+                tmp_g = copy.deepcopy(g.ori_graph)
+                generated_graphs.append(MyGraph(tmp_g, self.max_label))
+                geds.append(mcs_size)
+            return generated_graphs, geds
+        else:
+            for i in range(k):
+                tmp_g = copy.deepcopy(g.ori_graph)
+                # sample how many edit operation to perform
+                #    op_num = randint(1,7)#FLAGS.GED_threshold-2)
+                #    if op_num  == 7:
+                #        op_num = 1
+                op_num = randint(1, FLAGS.max_op)
+                # though not accurate, may be good enough
+                geds.append(op_num)
+                j = 0
+                op_cannot_be_1 = False
+                op_cannot_be_2 = False
+                while j < op_num:
+                    # randomly select a operation and do it
+                    # 0: change node label, 1: insert edge, 2: delete edge
+                    # 3: insert node; 4: delete node
+                    can_delete_node = self.has_isolate_node(tmp_g)
+                    # couldn't delete edge when only one node left
+                    op_cannot_be_2 = len(tmp_g['edges']) == 0
+
+                    op = randint(0, 4)
+                    while (can_delete_node is False and op == 4) or \
+                            (op == 0 and 'constant' in self.node_feat_type) or \
+                            (op_cannot_be_1 and op == 1) or \
+                            (op_cannot_be_2 and op == 2):
+                        op = randint(0, 4)
+
+                    if op == 0:
+                        self.random_change_node_label(tmp_g)
+
+                    elif op == 1:
+                        if not self.random_insert_edge(tmp_g):
+                            op_cannot_be_1 = True
+                            # insert edge fail, this op doesn't count
+                            j = j - 1
+                        else:
+                            op_cannot_be_2 = True
+
+                    elif op == 2:
+                        if not self.random_delete_edge(tmp_g):
+                            op_cannot_be_2 = True
+                            # delete fail, this op doesn't count
+                            j = j - 1
+                        else:
+                            op_cannot_be_1 = False
+
+                    elif op == 3:
+                        self.random_insert_node(tmp_g)
+                        # insert node takes 2 ops, so add an extra one here
+                        j = j + 1
+                        op_cannot_be_1 = False
+
+                    else:
+                        self.random_delete_node(tmp_g)
+                        # delete node takes 2 ops
+                        j = j + 1
+
+                    j = j + 1
+                generated_graphs.append(MyGraph(tmp_g, self.max_label))
+
+            return generated_graphs, geds
+
+
+
+
     
     def has_isolate_node(self, g):
         non_isolate_nodes = set()

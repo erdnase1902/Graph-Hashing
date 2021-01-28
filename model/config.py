@@ -36,8 +36,8 @@ else:
 flags.DEFINE_boolean('sample_by_proximity', False, 'if enable sample by proximity')
 flags.DEFINE_integer('sample_pool_size', 200, 'Sample Pool Size')
 flags.DEFINE_integer('positive_sample_num', 5, 'positive sample number')
-flags.DEFINE_integer('update_iter_num', 10, 'Number of iterations to update sample pool') # recommend ecd_batchsize/batchsize
-
+# flags.DEFINE_integer('update_iter_num', 10, 'Number of iterations to update sample pool') # recommend ecd_batchsize/batchsize
+flags.DEFINE_integer('update_iter_num', 2, 'Number of iterations to update sample pool') # recommend ecd_batchsize/batchsize # TODO: change back for debugging
 
 flags.DEFINE_string('bit_weight_type', 'const', 'type of bit weight type, const, log, exp or var')
 
@@ -49,7 +49,8 @@ flags.DEFINE_boolean('clip', True, 'clip GED beyond GED_threshold')
 flags.DEFINE_integer('max_op', 1, 'maximum operations to generate synthetic graphs')
 flags.DEFINE_integer('k', 0, 'when training, we would generate k similar graphs for each one of sampled graphs')
 flags.DEFINE_integer('GED_threshold', 11, 'threshold within which 2 graphs are similar')
-flags.DEFINE_integer('batchsize',10,'batch size for training')
+# flags.DEFINE_integer('batchsize',10,'batch size for training')
+flags.DEFINE_integer('batchsize',2,'batch size for training') # TODO: change back for debugging
 flags.DEFINE_integer('ecd_batchsize', 100, 'encoding batch size')
 flags.DEFINE_string('label_type', 'ged', 'whether training label should be binary or ged')
 
