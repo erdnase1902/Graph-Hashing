@@ -270,7 +270,7 @@ def mcs_simple_default_args(g1, g2):
     algo = 'mccreesh2017'
     labeled = True
     label_key = 'type'
-    recursion_threshold = 7500
+    recursion_threshold = 1000
     save_every_seconds = -1
     save_every_iter = False
     debug = False
@@ -278,6 +278,9 @@ def mcs_simple_default_args(g1, g2):
     timeout = 1
     computer_name = 'yba'
     fp_prepend_info = 'mccreesh2017_iters_aids700nef'
+
+
+
     return mcs_simple(g1, g2, algo, labeled, label_key, recursion_threshold,
                save_every_seconds, save_every_iter,
                debug, timeit, timeout,

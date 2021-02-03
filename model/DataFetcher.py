@@ -265,7 +265,7 @@ class DataFetcher:
                 labels = {idx:label for idx, label in enumerate(zongyue_graph.ori_graph['nodes'])}
                 # nx.relabel_nodes(ret_graph, labels, copy=False)
                 # {'type':label, 'label':idx}
-                print('num nodes: {}'.format(len(zongyue_graph.ori_graph['nodes'])))
+                # print('num nodes: {}'.format(len(zongyue_graph.ori_graph['nodes'])))
                 for idx in range(len(zongyue_graph.ori_graph['nodes'])):
                     ret_graph.nodes[idx]['type'] = labels[idx]
                     ret_graph.nodes[idx]['label'] = idx
@@ -277,8 +277,9 @@ class DataFetcher:
 
             for row_idx in range(len(self.sample_graphs)):
                 for col_idx in range(row_idx+1, len(self.sample_graphs), 1):
-                    value = mcs_simple_default_args(to_nx_graph(self.sample_graphs[row_idx], row_idx), to_nx_graph(self.sample_graphs[col_idx], col_idx))[0]
-                    print('value {}'.format(value))
+                    # print('type of self.sample_graphs is', type(self.sample_graphs))
+                    value = mcs_simple_default_args(to_nx_graph(self.sample_graphs[row_idx], row_idx), to_nx_graph(self.sample_graphs[col_idx], col_idx))
+                    # print('value {}'.format(value))
                     self.labels[row_idx][col_idx] = value
             self.labels = self.labels + self.labels.T
 
