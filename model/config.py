@@ -4,7 +4,7 @@ flags = tf.app.flags
 FLAGS = flags.FLAGS
 
 #dataset related
-dataset = 'linux15'
+dataset = 'FULL_ALCHEMY'
 
 if 'linux' in dataset:
     flags.DEFINE_string('dataset', dataset,'Dataset string.')  # 'cora', 'citeseer', 'pubmed'
@@ -88,7 +88,8 @@ flags.DEFINE_integer('hash_code_len', 32,'length of hash code')
 flags.DEFINE_float('dropout', 0., 'Dropout rate (1 - keep probability).')
 flags.DEFINE_float('valid_percentage', 0, 'percentage of validation set')
 flags.DEFINE_float('learning_rate', 0.001, 'Initial learning rate.')
-flags.DEFINE_integer('epochs', 15000, 'Number of epochs to train.')
+# flags.DEFINE_integer('epochs', 15000, 'Number of epochs to train.')
+flags.DEFINE_integer('epochs', 10, 'Number of epochs to train.') # TODO: change back for debugging
 flags.DEFINE_integer('early_stopping_large_range', 500, '')
 flags.DEFINE_integer('early_stopping_small_range', 50, '')
 flags.DEFINE_integer('early_stopping_check_frequency', 50, '')

@@ -7,7 +7,7 @@ from os import getpid
 from time import time
 import networkx as nx
 from glob import glob
-import pickle5 as pickle
+# import pickle5 as pickle
 
 def node_id_map_to_label_map(g1, g2, node_id_map):
     node_label_map = {}
